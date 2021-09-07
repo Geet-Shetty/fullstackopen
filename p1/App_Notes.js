@@ -1,3 +1,4 @@
+// how to use guide: https://fullstackopen.com/en/part1/introduction_to_react
 // COMPONENT NAMES Must have first letter caps
 // can use <> instead of <div> because divs show up in the dom tree
 /**
