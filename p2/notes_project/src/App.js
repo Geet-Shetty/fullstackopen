@@ -1,6 +1,7 @@
 import React from "react";
 import Course from "./components/Course";
 
+// if courses is passed thru index it doesnt update on save?
 const App = () => {
   const courses = [
     {
@@ -35,7 +36,7 @@ const App = () => {
       parts: [
         {
           name: "Routing",
-          exercises: 3,
+          exercises: 9,
           id: 1,
         },
         {
