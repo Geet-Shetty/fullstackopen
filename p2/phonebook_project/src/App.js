@@ -39,6 +39,7 @@ const App = () => {
     setNewNumber(event.target.value);
   };
 
+  // could make into add new, and numbers components but moving on
   return (
     <div>
       <div>debug: {newName}</div>
