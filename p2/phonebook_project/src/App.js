@@ -1,12 +1,22 @@
-import React, { useState } from "react";
 import Info from "./components/Info.js";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: "Arto Hellas", number: "234-2340", id: 1 },
-  ]);
+  //{ name: "Arto Hellas", number: "234-2340", id: 1 },
+  const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("Add Name");
   const [newNumber, setNewNumber] = useState("Add Number");
+
+  const hook = () => {
+    console.log("effect");
+    axios.get("http://localhost:3001/persons").then((response) => {
+      console.log("promise fulfilled");
+      setPersons(response.data);
+    });
+  };
+
+  useEffect(hook, []); // If the second parameter is an empty array [], then the effect is only run along with the first render of the component.
 
   const addInfo = (event) => {
     event.preventDefault();
