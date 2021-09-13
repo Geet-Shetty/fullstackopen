@@ -1,5 +1,6 @@
-import Info from "./components/Info.js";
-import axios from "axios";
+import List from "./components/List.js";
+import AddForm from "./components/AddForm.js";
+import personService from "./services/person";
 import React, { useEffect, useState } from "react";
 
 const App = () => {
@@ -10,9 +11,12 @@ const App = () => {
 
   const hook = () => {
     console.log("effect");
-    axios.get("http://localhost:3001/persons").then((response) => {
-      console.log("promise fulfilled");
-      setPersons(response.data);
+    // axios.get("http://localhost:3001/persons").then((response) => {
+    //   console.log("promise fulfilled");
+    //   setPersons(response.data);
+    // });
+    personService.getAll().then((person_list) => {
+      setPersons(person_list);
     });
   };
 
@@ -29,10 +33,11 @@ const App = () => {
       const info = {
         name: newName,
         number: newNumber,
-        id: persons.length + 1,
       };
-
-      setPersons(persons.concat(info));
+      personService.create(info).then((person) => {
+        setPersons(persons.concat(person));
+      });
+      //setPersons(persons.concat(info));
     }
     setNewName("");
     setNewNumber("");
@@ -49,31 +54,31 @@ const App = () => {
     setNewNumber(event.target.value);
   };
 
+  // const deletePerson = (id) => {
+  //   //const person = persons.find((person) => person.id === id);
+  //   personService
+  //     .deletePerson(id)
+  //     .then(() => {
+  //       setPersons(persons.filter((person) => person.id !== id));
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //     });
+  // };
+
   // could make into add new, and numbers components but moving on
   return (
     <div>
       <div>debug: {newName}</div>
       <h2>Phonebook</h2>
-      <h2>Add New</h2>
-      <form onSubmit={addInfo}>
-        <div>
-          name: <input onChange={handleNameChange} value={newName} />
-        </div>
-        <div>
-          number: <input onChange={handleNumberChange} value={newNumber} />
-        </div>
-        <div>
-          <button type="submit">add</button>
-        </div>
-      </form>
-      <h2>Numbers</h2>
-      <table>
-        <tbody>
-          {persons.map((person) => {
-            return <Info key={person.id} person={person} />;
-          })}
-        </tbody>
-      </table>
+      <AddForm
+        addInfo={addInfo}
+        handleNameChange={handleNameChange}
+        newName={newName}
+        handleNumberChange={handleNumberChange}
+        newNumber={newNumber}
+      />
+      <List persons={persons} />
     </div>
   );
 };
