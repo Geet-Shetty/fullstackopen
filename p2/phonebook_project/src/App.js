@@ -1,14 +1,17 @@
 import List from "./components/List.js";
 import AddForm from "./components/AddForm.js";
+import Notification from "./components/Notification";
 import personService from "./services/person";
 import React, { useEffect, useState } from "react";
-import person from "./services/person";
+import "./App.css";
 
 const App = () => {
   //{ name: "Arto Hellas", number: "234-2340", id: 1 },
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("Add Name");
   const [newNumber, setNewNumber] = useState("Add Number");
+  const [notiMessage, setNotiMessage] = useState(null);
+  const [status, setStatus] = useState(false);
 
   const hook = () => {
     console.log("effect");
@@ -28,6 +31,14 @@ const App = () => {
 
   useEffect(hook, []); // If the second parameter is an empty array [], then the effect is only run along with the first render of the component.
 
+  const setNotification = (message, status) => {
+    setStatus(status);
+    setNotiMessage(message);
+    setTimeout(() => {
+      setNotiMessage(null);
+    }, 5000);
+  };
+
   const addInfo = (event) => {
     event.preventDefault();
 
@@ -36,13 +47,19 @@ const App = () => {
       //window.alert(`${newName} is a dup!`);
       if (window.confirm(`Replace old number for ${newName}`)) {
         const changedPerson = { ...dups[0], number: newNumber };
-        personService.update(dups[0].id, changedPerson).then((newPerson) => {
-          setPersons(
-            persons.map((person) => {
-              return person.id !== dups[0].id ? person : newPerson;
-            })
-          );
-        });
+        personService
+          .update(dups[0].id, changedPerson)
+          .then((newPerson) => {
+            setPersons(
+              persons.map((person) => {
+                return person.id !== dups[0].id ? person : newPerson;
+              })
+            );
+          })
+          .catch((error) => {
+            setNotification(`${dups[0].name} has already been deleted`, false);
+          });
+        setNotification(`Changed ${newName} Number`, true);
       }
     } else {
       const info = {
@@ -57,6 +74,7 @@ const App = () => {
         .catch((error) => {
           console.log(error);
         });
+      setNotification(`Added ${newName} Number`, true);
       //setPersons(persons.concat(info));
     }
     setNewName("");
@@ -94,6 +112,7 @@ const App = () => {
       <div>debug: {newName}</div>
       <div>debug: {newNumber}</div>
       <h2>Phonebook</h2>
+      <Notification message={notiMessage} status={status} />
       <AddForm
         addInfo={addInfo}
         handleNameChange={handleNameChange}
