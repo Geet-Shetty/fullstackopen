@@ -1,3 +1,5 @@
+const Person = require("./models/person");
+
 let persons = [
   {
     id: 1,
@@ -25,6 +27,10 @@ const express = require("express");
 const morgan = require("morgan");
 const app = express();
 
+const cors = require("cors");
+
+app.use(cors());
+
 const requestLogger = (request, response, next) => {
   console.log("Method:", request.method);
   console.log(typeof request.method);
@@ -46,7 +52,9 @@ morgan.token("body", function (req) {
 });
 
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then((persons) => {
+    response.json(persons);
+  });
 });
 
 app.get("/info", (request, response) => {
@@ -58,22 +66,36 @@ app.get("/info", (request, response) => {
 });
 
 app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find((person) => person.id === id);
+  // const id = Number(request.params.id);
+  // const person = persons.find((person) => person.id === id);
 
-  if (person) {
-    // if not null
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
+  // if (person) {
+  //   // if not null
+  //   response.json(person);
+  // } else {
+  //   response.status(404).end();
+  // }
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person); // found and returing
+      } else {
+        response.status(404).end(); // not found with correctly formatted id
+      }
+    })
+    .catch((error) => {
+      //console.log(error);
+      // response.status(400).send({ error: "malformatted id" });  //threw incorrect format error, now handled by middleware
+      next(error);
+    });
 });
 
 app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  persons = persons.filter((person) => person.id !== id);
-
-  response.status(204).end();
+  Person.findByIdAndRemove(request.params.id)
+    .then((result) => {
+      response.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
 const generateId = (persons) => {
@@ -110,23 +132,27 @@ app.post("/api/persons", (request, response) => {
     return response.status(400).json({
       error: "name missing",
     });
-  } else if (
-    persons.find((person) => {
-      return person.name === body.name;
-    })
-  ) {
-    return response.status(400).json({
-      error: "name dup",
-    });
   }
+  // else if (
+  //   persons.find((person) => {
+  //     return person.name === body.name;
+  //   })
+  // ) {
+  //   return response.status(400).json({
+  //     error: "name dup",
+  //   });
+  // }
 
-  const person = {
+  const person = new Person({
     name: body.name,
     number: body.number,
-    id: generateId(persons),
-  };
-  persons = persons.concat(person);
-  response.json(person);
+  });
+  // persons = persons.concat(person);
+  // response.json(person);
+
+  person.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
 });
 
 const unknownEndpoint = (request, response) => {
@@ -134,6 +160,19 @@ const unknownEndpoint = (request, response) => {
 };
 
 app.use(unknownEndpoint);
+
+const errorHandler = (error, request, response, next) => {
+  console.log("ran");
+  // console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = 3001;
 app.listen(PORT);

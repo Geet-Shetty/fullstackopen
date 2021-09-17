@@ -11,10 +11,15 @@ const App = () => {
 
   const hook = () => {
     console.log("effect");
-    noteService.getAll().then((initialNotes) => {
-      console.log("promise fulfilled");
-      setNotes(initialNotes);
-    });
+    noteService
+      .getAll()
+      .then((initialNotes) => {
+        console.log("promise fulfilled");
+        setNotes(initialNotes);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   useEffect(hook, []); // If the second parameter is an empty array [], then the effect is only run along with the first render of the component.

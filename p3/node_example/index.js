@@ -1,10 +1,11 @@
-// const http = require("http"); // node's built in web server
+//const Note = mongoose.model("Note", noteSchema); // fancy constructor
+const Note = require("./models/note");
 
+// const http = require("http"); // node's built in web server
 // const app = http.createServer((request, response) => {
 //   response.writeHead(200, { "Content-Type": "text/plain" });
 //   response.end("Hello World");
 // });
-
 let notes = [
   {
     id: 1,
@@ -26,11 +27,27 @@ let notes = [
   },
 ];
 
-// developed to ease server side development
+// developed to ease server side development (middleware)
 const express = require("express");
 const app = express();
 
+const cors = require("cors");
+
+app.use(cors());
+
 app.use(express.json()); // json-parser
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
+};
+
+// this has to be the last loaded middleware.
 
 // to handle HTTP GET requests made to the application's / root:
 // request parameter contains all of the information of the HTTP request
@@ -41,7 +58,9 @@ app.get("/", (request, response) => {
 
 //defines an event handler, that handles HTTP GET requests made to the notes path of the application:
 app.get("/api/notes", (request, response) => {
-  response.json(notes);
+  Note.find({}).then((notes) => {
+    response.json(notes);
+  });
 });
 
 app.get("/api/notes/:id", (request, response) => {
@@ -52,22 +71,40 @@ app.get("/api/notes/:id", (request, response) => {
   //   });
   //   console.log(note);
   //   response.json(note);
-  const id = Number(request.params.id);
-  const note = notes.find((note) => note.id === id);
+  // const id = Number(request.params.id);
+  // const note = notes.find((note) => note.id === id);
+  // if (note) {
+  //   // if not null
+  //   response.json(note);
+  // } else {
+  //   response.status(404).end();
+  // }
 
-  if (note) {
-    // if not null
-    response.json(note);
-  } else {
-    response.status(404).end();
-  }
+  Note.findById(request.params.id)
+    .then((note) => {
+      if (note) {
+        response.json(note);
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      // response.status(400).send({ error: "malformatted id" });
+      next(error);
+    });
 });
 
 app.delete("/api/notes/:id", (request, response) => {
-  const id = Number(request.params.id);
-  notes = notes.filter((note) => note.id !== id);
+  // const id = Number(request.params.id);
+  // notes = notes.filter((note) => note.id !== id);
 
-  response.status(204).end();
+  // response.status(204).end();
+  Note.findByIdAndRemove(request.params.id)
+    .then((result) => {
+      response.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
 const generateId = () => {
@@ -80,21 +117,45 @@ app.post("/api/notes", (request, response) => {
   const body = request.body; //Without the json-parser, the body property would be undefined.
 
   if (!body.content) {
+    // === undefined
     // if null
     return response.status(400).json({
       error: "content missing",
     });
   }
 
-  const note = {
+  const note = new Note({
     content: body.content,
     important: body.important || false,
-    date: new Date(), // date is done by server for consistency
-    id: generateId(),
+    date: new Date(),
+  });
+
+  // const note = {
+  //   content: body.content,
+  //   important: body.important || false,
+  //   date: new Date(), // date is done by server for consistency
+  // };
+  // notes = notes.concat(note);
+  // console.log(note);
+  // response.json(note);
+  note.save().then((savedNote) => {
+    response.json(savedNote);
+  });
+});
+
+app.put("/api/notes/:id", (request, response, next) => {
+  const body = request.body;
+
+  const note = {
+    content: body.content,
+    important: body.important,
   };
-  notes = notes.concat(note);
-  console.log(note);
-  response.json(note);
+
+  Note.findByIdAndUpdate(request.params.id, note, { new: true })
+    .then((updatedNote) => {
+      response.json(updatedNote);
+    })
+    .catch((error) => next(error));
 });
 
 // // set app and create http response to server
@@ -104,7 +165,7 @@ app.post("/api/notes", (request, response) => {
 // });
 
 // listen to port
-const PORT = 3001;
+const PORT = process.env.PORT;
 app.listen(PORT);
 console.log(`Server running on port ${PORT}`);
 
