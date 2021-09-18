@@ -42,26 +42,26 @@ const App = () => {
   const addInfo = (event) => {
     event.preventDefault();
 
-    let dups = persons.filter((person) => person.name === newName); // USE FIND INSTEAD U FUCKEN MORON SO U DONT HAVE TO DO DUPS[0]
-    if (dups.length > 0) {
-      //window.alert(`${newName} is a dup!`);
-      // if (window.confirm(`Replace old number for ${newName}`)) {
-      // const changedPerson = { ...dups[0], number: newNumber };
-      // personService
-      //   .update(dups[0].id, changedPerson)
-      //   .then((newPerson) => {
-      //     setPersons(
-      //       persons.map((person) => {
-      //         return person.id !== dups[0].id ? person : newPerson;
-      //       })
-      //     );
-      //   })
-      //   .catch((error) => {
-      //     setNotification(`${dups[0].name} has already been deleted`, false);
-      //   });
-      // setNotification(`Changed ${newName} Number`, true);
-    }
-    // } else {
+    // let dups = persons.filter((person) => person.name === newName); // USE FIND INSTEAD U FUCKEN MORON SO U DONT HAVE TO DO DUPS[0]
+    // if (dups.length > 0) {
+    //   //window.alert(`${newName} is a dup!`);
+    //   // if (window.confirm(`Replace old number for ${newName}`)) {
+    //   // const changedPerson = { ...dups[0], number: newNumber };
+    //   // personService
+    //   //   .update(dups[0].id, changedPerson)
+    //   //   .then((newPerson) => {
+    //   //     setPersons(
+    //   //       persons.map((person) => {
+    //   //         return person.id !== dups[0].id ? person : newPerson;
+    //   //       })
+    //   //     );
+    //   //   })
+    //   //   .catch((error) => {
+    //   //     setNotification(`${dups[0].name} has already been deleted`, false);
+    //   //   });
+    //   // setNotification(`Changed ${newName} Number`, true);
+    // }
+    // // } else {
     const info = {
       name: newName,
       number: newNumber,
