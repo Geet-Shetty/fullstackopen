@@ -1,5 +1,3 @@
-const Person = require("./models/person");
-
 let persons = [
   {
     id: 1,
@@ -24,12 +22,25 @@ let persons = [
 ];
 
 const express = require("express");
-const morgan = require("morgan");
 const app = express();
-
+const morgan = require("morgan");
 const cors = require("cors");
+require("dotenv").config();
+const Person = require("./models/person");
+
+const errorHandler = (error, request, response, next) => {
+  console.log("ran");
+  // console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
+};
 
 app.use(cors());
+app.use(express.json()); // The express json-parser we took into use earlier is a so-called middleware.
 
 const requestLogger = (request, response, next) => {
   console.log("Method:", request.method);
@@ -40,8 +51,8 @@ const requestLogger = (request, response, next) => {
   next();
 };
 
-app.use(express.json()); // The express json-parser we took into use earlier is a so-called middleware.
-app.use("/api/persons", requestLogger);
+app.use(requestLogger);
+
 app.use(
   "/api/persons",
   morgan(":method :url :status :res[content-length] - :response-time ms :body")
@@ -65,16 +76,7 @@ app.get("/info", (request, response) => {
   );
 });
 
-app.get("/api/persons/:id", (request, response) => {
-  // const id = Number(request.params.id);
-  // const person = persons.find((person) => person.id === id);
-
-  // if (person) {
-  //   // if not null
-  //   response.json(person);
-  // } else {
-  //   response.status(404).end();
-  // }
+app.get("/api/persons/:id", (request, response, next) => {
   Person.findById(request.params.id)
     .then((person) => {
       if (person) {
@@ -84,8 +86,6 @@ app.get("/api/persons/:id", (request, response) => {
       }
     })
     .catch((error) => {
-      //console.log(error);
-      // response.status(400).send({ error: "malformatted id" });  //threw incorrect format error, now handled by middleware
       next(error);
     });
 });
@@ -150,9 +150,12 @@ app.post("/api/persons", (request, response) => {
   // persons = persons.concat(person);
   // response.json(person);
 
-  person.save().then((savedPerson) => {
-    response.json(savedPerson);
-  });
+  person
+    .save()
+    .then((savedPerson) => {
+      response.json(savedPerson);
+    })
+    .catch((error) => next(error));
 });
 
 const unknownEndpoint = (request, response) => {
@@ -160,17 +163,6 @@ const unknownEndpoint = (request, response) => {
 };
 
 app.use(unknownEndpoint);
-
-const errorHandler = (error, request, response, next) => {
-  console.log("ran");
-  // console.error(error.message);
-
-  if (error.name === "CastError") {
-    return response.status(400).send({ error: "malformatted id" });
-  }
-
-  next(error);
-};
 
 app.use(errorHandler);
 

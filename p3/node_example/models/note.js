@@ -6,7 +6,7 @@ dotenv.config("./env");
 const password = process.env.DB_PASSWORD;
 console.log(password);
 
-const url = `mongodb+srv://geetAdmin:${password}@tuludictionary.ks25c.mongodb.net/note-app?retryWrites=true&w=majority`;
+const url = process.env.DB_URL;
 
 mongoose
   .connect(url)
@@ -17,10 +17,23 @@ mongoose
     console.log("error connecting to MongoDB:", error.message);
   });
 
+// const noteSchema = new mongoose.Schema({
+//   // defines the shape of the documents within that collection.
+//   content: String,
+//   date: Date,
+//   important: Boolean,
+// });
+
 const noteSchema = new mongoose.Schema({
-  // defines the shape of the documents within that collection.
-  content: String,
-  date: Date,
+  content: {
+    type: String,
+    minLength: 5,
+    required: true,
+  },
+  date: {
+    type: Date,
+    required: true,
+  },
   important: Boolean,
 });
 
